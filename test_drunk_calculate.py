@@ -1,69 +1,47 @@
-import sys
+import unittest
 from io import StringIO
+import builtins
 from drunk_polish_calculator import op_plus, op_minus, op_multiply, op_divide, main
 
 
-def test_op_plus():
-    # given
-    x = 1
-    y = 1
-    expected = 2
+class CalculatorTestCase(unittest.TestCase):
+    def test_op_plus(self):
+        result = op_plus(2, 3)
+        self.assertEqual(result, 5)
 
-    # when
-    result = op_plus(1, 1)
+    def test_op_minus(self):
+        result = op_minus(3, 2)
+        self.assertEqual(result, -1)
 
+    def test_op_multiply(self):
+        result = op_multiply(2, 3)
+        self.assertEqual(result, 6)
 
-def test_op_minus():
-    # given
-    x = 1
-    y = 2
-    expected = 1
+    def test_op_divide(self):
+        result = op_divide(6, 3)
+        self.assertEqual(result, 2)
 
-    # when
-    result = op_minus(1, 2)
+    def test_main(self):
+        input_string = "2 2 + 4 5 * / 4 2 -\n"
+        expected_output = "5.0"
 
-    # then
-    assert result == expected
+        stdin = StringIO(input_string)
+        stdout = StringIO()
 
+        original_input = builtins.input
+        original_print = builtins.print
+        builtins.input = lambda _: stdin.readline().rstrip('\n')
+        builtins.print = lambda *args, **kwargs: original_print(*args, file=stdout, **kwargs)
 
-def test_op_multiply():
-    # given
-    x = 2
-    y = 2
-    expected = 4
+        main()
 
-    # when
-    result = op_multiply(2, 2)
+        builtins.input = original_input
+        builtins.print = original_print
 
-    # then
-    assert result == expected
-
-
-def test_op_divide():
-    # given
-    x = 6
-    y = 2
-    expected = 3
-
-    # when
-    result = op_divide(6, 2)
-
-    # then
-    assert result == expected
+        output = stdout.getvalue().strip()
+        self.assertEqual(output, expected_output)
+        self.assertEqual(stdin.readline(), "")
 
 
-def test_main(capsys):
-    # given
-    test_input = '2 2 + 4 5 * / 4 2 -'
-    sys.stdin = StringIO(test_input)
-
-    # when
-
-    main()
-    captured = capsys.readouterr()
-    output = captured.out.strip()
-
-    # then
-    assert output == "Expression with space delimiter:5.0"
-
-    sys.stdin = sys.__stdin__
+if __name__ == '__main__':
+    unittest.main()
