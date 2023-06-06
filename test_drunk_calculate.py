@@ -1,46 +1,61 @@
 import unittest
 from io import StringIO
-import builtins
+from unittest.mock import patch
 from drunk_polish_calculator import op_plus, op_minus, op_multiply, op_divide, main
 
 
 class CalculatorTestCase(unittest.TestCase):
     def test_op_plus(self):
-        result = op_plus(2, 3)
-        self.assertEqual(result, 5)
-
+        test_cases = [
+            (2, 2, 4.0),
+            (5, 5, 10.0),
+            (7, 8, 15.0)
+        ]
+        for x, y, expected in test_cases:
+            result = op_plus(x, y)
+            self.assertEqual(result, expected)
     def test_op_minus(self):
-        result = op_minus(3, 2)
-        self.assertEqual(result, -1)
+        test_cases = [
+            (2, 3, 1.0),
+            (4, 2, -2.0),
+            (5, 10, 5.0),
+        ]
+        for y, x, expected in test_cases:
+            result = op_minus(y, x)
+            self.assertEqual(result, expected)
 
     def test_op_multiply(self):
-        result = op_multiply(2, 3)
-        self.assertEqual(result, 6)
+        test_cases = [
+            (2, 2, 4.0),
+            (5, 5, 25.0),
+            (10, 2, 20.0)
+        ]
+        for x, y, expected in test_cases:
+            result = op_multiply(x, y)
+            self.assertEqual(result, expected)
 
     def test_op_divide(self):
-        result = op_divide(6, 3)
-        self.assertEqual(result, 2)
+        test_cases = [
+            (2, 4, 2.0),
+            (4, 2, 0.5),
+            (5, 10, 2.0),
+        ]
+        for x, y, expected in test_cases:
+            result = op_divide(y, x)
+            self.assertEqual(result, expected)
 
+class TestMain(unittest.TestCase):
     def test_main(self):
-        input_string = "2 2 + 4 5 * / 4 2 -\n"
-        expected_output = "5.0"
 
-        stdin = StringIO(input_string)
-        stdout = StringIO()
+        input_string = "2 2 + 4 5 * / 4 2 -"
+        expected_output = 5.0
 
-        original_input = builtins.input
-        original_print = builtins.print
-        builtins.input = lambda _: stdin.readline().rstrip('\n')
-        builtins.print = lambda *args, **kwargs: original_print(*args, file=stdout, **kwargs)
+        with unittest.mock.patch('builtins.input', return_value=input_string):
 
-        main()
+            with unittest.mock.patch('builtins.print') as mock_print:
+                main()
 
-        builtins.input = original_input
-        builtins.print = original_print
-
-        output = stdout.getvalue().strip()
-        self.assertEqual(output, expected_output)
-        self.assertEqual(stdin.readline(), "")
+                mock_print.assert_called_with(expected_output)
 
 
 if __name__ == '__main__':
