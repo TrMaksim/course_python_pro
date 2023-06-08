@@ -48,7 +48,7 @@ def get_currency_exchange_rate(currency_a: str,
 
 
 def validate_rate_date(rate_date: str) -> str | None:
-    formats = ["%Y-%m-%d", "%d-%m-%Y", "%d.%m.%Y", "%m.%d.%Y"]
+    formats = ["%Y-%m-%d", "%d-%m-%Y", "%d.%m.%Y", "%m.%d.%Y", "%Y.%m.%d"]
 
     for date_format in formats:
         try:
@@ -56,16 +56,31 @@ def validate_rate_date(rate_date: str) -> str | None:
             formatted_date = date.strftime("%d.%m.%Y")
             return formatted_date
         except ValueError:
-            return "Incorrect date format"
+            continue
+
+
+def validate_input_bank(bank: str) -> str | None:
+    formats = {
+        'NBU': {'nbu', 'NB', 'NationalBank', 'nationalbank', 'Nb', 'NBU'},
+        'PB': {'pb', 'Pb', 'privatbank', 'PrivatBank', 'pB', 'PRIVATBANK', 'PB'},
+    }
+
+    for bank_name, bank_formats in formats.items():
+        if bank in bank_formats:
+            return bank_name
 
 
 def get_pb_exchange_rate(convert_currency: str,
                          bank: str,
                          rate_date: str) -> str:
+    validate_data = validate_rate_date(rate_date)
+    if not validate_data:
+        return "Enter a different date format"
     params = {
         'json': '',
-        'date': validate_rate_date(rate_date),  # TODO додати функцію валідації формату дати
+        'date': validate_data,  # TODO додати функцію валідації формату дати
     }
+
     query = parse.urlencode(params)
     api_url = 'https://api.privatbank.ua/p24api/exchange_rates?'
     response = requests.get(api_url+query)
@@ -75,33 +90,30 @@ def get_pb_exchange_rate(convert_currency: str,
         rates = json['exchangeRate']
         for rate in rates:
             if rate['currency'] == convert_currency:
-                if bank == 'NBU':
+                valid_bank = validate_input_bank(bank)
+                if not valid_bank:
+                    return 'Rates for this bank is not supported'
+                if valid_bank == 'NBU':
                     try:
                         sale_rate = rate['saleRateNB']
                         purchase_rate = rate['purchaseRateNB']
-                        return f'Exchange rate UAH to {convert_currency} for {rate_date} at {bank}: sale={sale_rate}, purchase={purchase_rate}'
+                        return f'Exchange rate UAH to {convert_currency} for {validate_data} at {valid_bank}: sale={sale_rate}, purchase={purchase_rate}'
                     except:
                         return f'There is no exchange rate NBU for {convert_currency}'
-                elif bank == 'PB':
+                elif valid_bank == 'PB':
                     try:
                         sale_rate = rate['saleRate']
                         purchase_rate = rate['purchaseRate']
-                        return f'Exchange rate UAH to {convert_currency} for {rate_date} at {bank}: sale={sale_rate}, purchase={purchase_rate}'
+                        return f'Exchange rate UAH to {convert_currency} for {validate_data} at {valid_bank}: sale={sale_rate}, purchase={purchase_rate}'
                     except:
                         return f'There is no exchange rate PrivatBank for {convert_currency}'
     else:
         return f'error {response.status_code}'
 
-def validate_rate_date(rate_date: str) -> str | None:
-    formats = ["%Y-%m-%d", "%d-%m-%Y", "%d.%m.%Y", "%m.%d.%Y"]
 
-    for date_format in formats:
-        try:
-            date = datetime.strptime(rate_date, date_format)
-            formatted_date = date.strftime("%d.%m.%Y")
-            return formatted_date
-        except ValueError:
-            return "Incorrect date format"
-
-result = get_pb_exchange_rate('USD', 'PB', '01.11.2022')
-print(result)
+result_for_date = get_pb_exchange_rate('USD', 'privatbank', '01.11.2022')
+result_for_PB = get_pb_exchange_rate('USD', 'privatbank', '01.11.2022')
+result_for_NBU = get_pb_exchange_rate('USD', 'NBU', '01.11.2022')
+print(result_for_date)
+print(result_for_PB)
+print(result_for_NBU)
