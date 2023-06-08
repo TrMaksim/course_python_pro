@@ -1,7 +1,6 @@
 import unittest
-from io import StringIO
 from unittest.mock import patch
-from drunk_polish_calculator import op_plus, op_minus, op_multiply, op_divide, main
+from lessons_2.drunk_polish_calculator import op_plus, op_minus, op_multiply, op_divide, main
 
 
 class CalculatorTestCase(unittest.TestCase):
