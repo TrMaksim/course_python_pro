@@ -3,8 +3,9 @@ import uuid
 
 class Card:
 
-    def __init__(self, number_card: str, expiry_date: str, cvv: str,
+    def __init__(self, card_id: int, number_card: str, expiry_date: str, cvv: str,
                  issue_date: str, owner_id: uuid.UUID, status_card: str):
+        self.card_id = card_id
         self.number_card = number_card
         self.expiry_date = expiry_date
         self.cvv = cvv
@@ -13,18 +14,13 @@ class Card:
         self.status_card = status_card
 
     def activate(self) -> str:
-        if self.status_card == "новая":
-            self.status_card = "активная"
-            return "активная"
-        elif self.status_card == "заблокирована":
-            return "Заблокированная карта, не может активироваться"
+        if self.status_card == "new":
+            self.status_card = "activate"
+            return "activate"
+        elif self.status_card == "blocked":
+            return "Blocked card, can not be activated"
 
     def block(self) -> str:
-        if self.status_card == "активная":
-            self.status_card = "заблокирована"
-            return "заблокирована"
-
-    def secure_data(self) -> str:
-        secure_number_card = "X" * 12 + self.number_card[-4:]
-        secure_cvv = "X" * len(self.cvv)
-        return f"Secure Number: {secure_number_card}, CVV: {secure_cvv}"
+        if self.status_card == "activate":
+            self.status_card = "blocked"
+            return "blocked"
