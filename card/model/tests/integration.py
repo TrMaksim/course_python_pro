@@ -1,8 +1,8 @@
 import json
 import uuid
 from django.test import TestCase
-from .models import Cards
 from django.urls import reverse
+from card.model.models import Cards
 
 
 class CardTest(TestCase):
@@ -49,4 +49,5 @@ class CardTest(TestCase):
         self.assertEqual(card.expiry_date, data["expiry_date"])
         self.assertEqual(card.cvv, data["cvv"])
         self.assertEqual(card.status, data["status"])
+
 

@@ -1,5 +1,7 @@
 import json
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest, JsonResponse, HttpResponseRedirect
+from django.shortcuts import render
+from django.urls import reverse
 from django.views import View
 from .models import Cards
 
@@ -8,13 +10,26 @@ class CardsView(View):
 
     def get(self, request: HttpRequest):
         cards = Cards.objects.all()
-        return JsonResponse(
+        json_response = (
             {"cards": [{"pan": str(card.pan),
                         "expiry_date": str(card.expiry_date),
                         "cvv": str(card.cvv),
                         "owner_id": str(card.owner_id),
                         "status": str(card.status)} for card in cards]}
         )
+        if request.headers['accept'] == 'application/json':
+            return JsonResponse(json_response)
+        else:
+            context = {
+                "cards": [{
+                    "pan": card.pan,
+                    "expiry_date": card.expiry_date,
+                    "cvv": card.cvv,
+                    "owner_id": card.owner_id,
+                    "status": card.status
+                }
+                    for card in cards]}
+            return render(request, "cards/cards_list.html", context, "text/html")
 
     def post(self, request: HttpRequest):
         body = json.loads(request.body)
@@ -23,16 +38,16 @@ class CardsView(View):
         card.save()
         return JsonResponse({"id": str(card.id)})
 
-    def digits_on(self, number: str) -> list:
-        return [int(digit) for digit in str(number)]
 
-    def is_valid(self, request: HttpRequest) -> bool:
-        card_number = Cards.objects.get(pan="1234567890123456")
-        digits = self.digits_on(card_number)
-        odd_digits = digits[-1::-2]
-        even_digits = digits[-2::-2]
-        check_sum = 0
-        check_sum += sum(odd_digits)
-        for even_numbers in even_digits:
-            check_sum += sum(self.digits_on(even_numbers*2))
-        return check_sum % 10 == 0
+def create_card(request):
+    if request.method == "GET":
+        cards = Cards.objects.all()
+        return render(request, "cards/create_card.html", {"cards": cards})
+    elif request.method == "POST":
+        Cards.objects.create(
+            pan=request.POST["pan_card"],
+            expiry_date=request.POST["expiry_date_card"],
+            cvv=request.POST["cvv_card"],
+            status=request.POST["status_card"]
+        )
+        return HttpResponseRedirect(reverse("card"))
