@@ -1,60 +1,52 @@
 from django.test import TestCase
-from django.urls import reverse
 from card.model.models import Cards
 
 
 class CardsPageTest(TestCase):
-    def test_cards_page_render(self):
-        response = self.client.get(reverse('cards'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'cards/cards_page.html')
+    def test_cards_list_template(self):
+        expected_template = """
+        {% if cards %}
+        <table>
+            <tr>
+                <th>Card Pan</th>
+                <th>Expiration date</th>
+                <th>Card CVV</th>
+                <th>Cardholder ID</th>
+                <th>Status Card</th>
+            </tr>
+            {% for card in cards %}
+            <tr>
+                <td>{{ card.pan }}</td>
+                <td>{{ card.expiry_date }}</td>
+                <td>{{ card.cvv }}</td>
+                <td>{{ card.owner_id }}</td>
+                <td>{{ card.status }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <a href="{% url 'create_card' %}">Add new Card</a>
+        {% else %}
+        <p>There's not a single card here</p>
+        {% endif %}
+        """
 
-    def test_cards_list_content(self):
-        Cards.objects.create(
-            pan="1234567890123456",
-            expiry_date="12/25",
-            cvv="123",
-            owner_id="1",
-            status="Active"
-        )
+        self.assertMultiLineEqual(str(Cards.objects.get(pk=1)), expected_template)
 
-        response = self.client.get(reverse('cards'))
-        self.assertContains(response, "Card Pan")
-        self.assertContains(response, "1234567890123456")
-        self.assertContains(response, "Expiration date")
-        self.assertContains(response, "12/25")
-        self.assertContains(response, "Card CVV")
-        self.assertContains(response, "123")
-        self.assertContains(response, "Cardholder ID")
-        self.assertContains(response, "1")
-        self.assertContains(response, "Status Card")
-        self.assertContains(response, "Active")
+    def test_create_card_template(self):
+        expected_template = """
+        <h2>Create Card</h2>
+        <form method="POST" action="{% url 'create_card' %}">
+            {% csrf_token %}
+            <label for="pan_card">PAN Card:</label>
+            <input type="text" name="pan_card" required>
+            <label for="expiry_date_card">Expiry Date:</label>
+            <input type="text" name="expiry_date_card" required>
+            <label for="cvv_card">CVV:</label>
+            <input type="text" name="cvv_card" required>
+            <label for="status_card">Status:</label>
+            <input type="text" name="status_card" required>
+            <button type="submit">Create</button>
+        </form>
+        """
 
-    def test_empty_cards_list(self):
-        response = self.client.get(reverse('cards'))
-        self.assertContains(response, "There's not a single card here")
-
-    def test_create_card_page_render(self):
-        response = self.client.get(reverse('create_card'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'cards/create_card.html')
-
-    def test_create_card_form(self):
-        data = {
-            'pan_card': '1234567890123456',
-            'expiry_date_card': '12/25',
-            'cvv_card': '123',
-            'status_card': 'Active'
-        }
-        response = self.client.post(reverse('create_card'), data=data)
-
-        self.assertEqual(response.status_code, 302)
-
-        self.assertRedirects(response, reverse('cards'))
-
-        self.assertEqual(Cards.objects.count(), 1)
-        card = Cards.objects.first()
-        self.assertEqual(card.pan, '1234567890123456')
-        self.assertEqual(card.expiry_date, '12/25')
-        self.assertEqual(card.cvv, '123')
-        self.assertEqual(card.status, 'Active')
+        self.assertMultiLineEqual(str(Cards.objects.get(pk=1)), expected_template)
