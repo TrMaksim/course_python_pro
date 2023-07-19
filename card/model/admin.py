@@ -1,4 +1,4 @@
 from django.contrib import admin
-from .models import Cards
+from model.models.card_model import Cards
 
 admin.site.register(Cards)
