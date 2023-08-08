@@ -1,4 +1,5 @@
 import uuid
+import asyncio
 from django.db import models
 from django.http import HttpRequest
 from django.contrib.auth.models import User
@@ -44,3 +45,18 @@ class Cards(models.Model):
             check_sum += double_even
 
         return check_sum % 10 == 0
+
+    async def activate(self) -> str:
+        if self.status == "new":
+            await asyncio.sleep(120)
+            self.status = "active"
+            self.save()
+            return "activate"
+        elif self.status == "frozen":
+            return "Frozen card, cannot be activated"
+
+    def block(self) -> str:
+        if self.status == "active":
+            self.status = "frozen"
+            self.save()
+            return "frozen"
