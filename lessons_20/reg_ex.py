@@ -14,16 +14,15 @@ def match_ipn(text):
 
 
 def match_car_numbers(text):
-    pattern = r'\b[АВЕКМНОРСТУХ]{2}\d{4}[АВЕКМНОРСТУХ]\b'
+    pattern = r'\b[АЕХ]{2}\d{4}(?<!0{4})[АВЕКМНОРСТУХ]{2}\b'
     matches = re.findall(pattern, text)
     return matches
 
 
-# Приклад вхідного тексту
 input_text = """
     Паспорти: АВ123456, БК654321, УК987654.
     ІПН: 1234567890, 9876543210, 5555555555.
-    Номери: АВ1234А, ЕК5678М, СТ9876У.
+    Номери: АВ1234А, ЕК5678М, АХ1234ЕР.
 """
 
 passport_numbers = match_passport_number(input_text)
